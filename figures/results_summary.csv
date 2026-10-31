@@ -1,0 +1,9 @@
+run,group,model,batch_size,lr,augment,best_val_acc,best_epoch,test_acc,minutes
+baseline,baseline,alexnet,32,0.0001,True,0.901,11,0.890,4.2
+bs16,batch_size,alexnet,16,0.0001,True,0.907,11,0.901,4.1
+bs64,batch_size,alexnet,64,0.0001,True,0.889,6,0.872,4.1
+lr1e-3,learning_rate,alexnet,32,0.001,True,0.222,1,0.209,4.1
+lr1e-5,learning_rate,alexnet,32,1e-05,True,0.790,12,0.843,4.1
+no_aug,augmentation,alexnet,32,0.0001,False,0.895,7,0.884,3.6
+resnet18,architecture,resnet18,32,0.0001,True,0.951,5,0.953,4.1
+resnet50,architecture,resnet50,32,0.0001,True,0.988,7,0.988,4.6

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PartSight · AlexNet for Marine Engine Parts</title>
+<meta name="description" content="Classifying marine diesel engine parts from photos with AlexNet — Mathematics of Data Science final project.">
+<style>
+  :root {
+    --navy:#0B2545; --steel:#1D4E89; --orange:#F28C28; --light:#F2F5F9; --pale:#D6E2F0;
+    --ink:#1B2430; --muted:#5B6B7F; --bg:#FFFFFF; --card:#F2F5F9; --line:#D6E2F0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg:#0E1723; --ink:#E6EDF5; --muted:#9AAABC; --card:#16243A; --line:#243653; --navy:#9CC3F0; --steel:#6FA6E0; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 "Segoe UI", system-ui, -apple-system, Calibri, Arial, sans-serif; }
+  a { color:var(--steel); }
+  header.hero { background:#0B2545; color:#fff; padding:72px 16px 56px; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 16px; }
+  .hero h1 { font-size:clamp(2.2rem,6vw,3.4rem); margin:0 0 8px; letter-spacing:-.02em; }
+  .hero p.sub { font-size:1.2rem; color:#D6E2F0; margin:0 0 24px; max-width:640px; }
+  .hero .meta { color:#D6E2F0; font-size:.95rem; }
+  .hero .meta b { color:#fff; }
+  nav { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); }
+  nav .wrap { display:flex; gap:20px; overflow-x:auto; padding-top:12px; padding-bottom:12px; white-space:nowrap; }
+  nav a { text-decoration:none; color:var(--muted); font-weight:600; font-size:.95rem; }
+  nav a:hover { color:var(--orange); }
+  section { padding:56px 0 8px; }
+  h2 { font-size:1.8rem; color:var(--navy); margin:0 0 6px; }
+  .kicker { color:var(--orange); font-weight:700; text-transform:uppercase; font-size:.8rem; letter-spacing:.08em; }
+  .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin:20px 0; }
+  .card { background:var(--card); border-radius:10px; padding:18px 20px; }
+  .card h3 { margin:0 0 6px; color:var(--navy); font-size:1.05rem; }
+  .card p { margin:0; color:var(--ink); font-size:.95rem; }
+  .flow { display:flex; flex-wrap:wrap; gap:8px; margin:20px 0; }
+  .flow span { background:var(--steel); color:#fff; border-radius:8px; padding:8px 12px; font-weight:600; font-size:.9rem; }
+  .flow span.hl { background:var(--orange); }
+  .table-wrap { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:.93rem; margin:16px 0; }
+  th { background:#0B2545; color:#fff; text-align:left; padding:8px 10px; }
+  td { border-bottom:1px solid var(--line); padding:8px 10px; }
+  tr.best td { font-weight:700; color:var(--orange); }
+  figure { margin:24px 0; }
+  figure img { width:100%; border-radius:8px; border:1px solid var(--line); background:#fff; }
+  figcaption { color:var(--muted); font-size:.9rem; margin-top:6px; }
+  .missing { background:var(--card); border:2px dashed var(--line); border-radius:8px; padding:28px; text-align:center; color:var(--muted); font-size:.9rem; }
+  .arch { display:flex; align-items:flex-end; gap:6px; overflow-x:auto; padding:12px 0 4px; }
+  .arch div { flex:0 0 auto; width:68px; text-align:center; font-size:.7rem; line-height:1.3; color:var(--muted); }
+  .arch div i { display:block; border-radius:4px; margin-bottom:6px; }
+  .arch div b { display:block; color:var(--navy); font-size:.8rem; }
+  .callout { border-left:0; background:var(--card); padding:16px 20px; border-radius:10px; margin:20px 0; }
+  ul.take li { margin-bottom:8px; }
+  footer { margin-top:64px; padding:28px 0 40px; border-top:1px solid var(--line); color:var(--muted); font-size:.9rem; }
+  .btns a { display:inline-block; margin:4px 8px 4px 0; padding:9px 16px; border-radius:8px; background:var(--orange); color:#fff; text-decoration:none; font-weight:600; }
+  .btns a.ghost { background:transparent; border:1px solid #D6E2F0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Mathematics of Data Science · Final Project</div>
+    <h1>PartSight</h1>
+    <p class="sub">Identifying marine diesel engine parts from a single photo with AlexNet.</p>
+    <div class="btns">
+      <!-- ✏️ Replace the # with your links -->
+      <a href="https://colab.research.google.com/drive/1Crwjur-RTCPTQIfSx77DgfwMhj61zDWP?usp=sharing" id="link-colab">Colab notebook</a>
+      <a href="deliverables/PartSight_Slides.pdf" class="ghost" id="link-slides">Slides</a>
+      <a href="deliverables/PartSight_Poster.pdf" class="ghost" id="link-poster">Poster</a>
+      <!-- ✏️ Replace # with your YouTube (unlisted) link after recording -->
+      <a href="#" class="ghost" id="link-video">Video</a>
+    </div>
+    <p class="meta" style="margin-top:20px"><b>Ziya Batur Koroglu</b> · Fall 2026</p>
+  </div>
+</header>
+
+<nav><div class="wrap">
+  <a href="#problem">Problem</a><a href="#approach">Approach</a><a href="#data">Data</a>
+  <a href="#experiments">Experiments</a><a href="#results">Results</a><a href="#takeaways">Takeaways</a><a href="#deliverables">Deliverables</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="problem">
+  <div class="kicker">Motivation</div>
+  <h2>A part request starts with a photo</h2>
+  <p>When a ship's generator needs a replacement part, an engineer often sends the supplier a photo of the worn part: no label, no part number, poor engine-room lighting. Someone experienced has to recognize it by eye before anything can be quoted or sourced. That step is slow, depends on a few experts, and a wrong identification means a wrong order and a second delay.</p>
+  <div class="flow"><span>Engineer sends photo</span><span class="hl">Identify the part</span><span>Look up sources</span><span>Send quote</span></div>
+  <p><strong>PartSight</strong> automates the highlighted step: given a photo, it predicts which of six high-volume parts it shows.</p>
+  <div class="grid">
+    <div class="card"><h3>Fuel injector</h3><p>Most frequently replaced wear part on generator engines.</p></div>
+    <div class="card"><h3>Turbocharger</h3><p>High-value unit; fast identification speeds up large quotes.</p></div>
+    <div class="card"><h3>Piston</h3><p>Overhaul item with many crown shapes and sizes.</p></div>
+    <div class="card"><h3>Connecting rod</h3><p>Long forged part, easily confused with others.</p></div>
+    <div class="card"><h3>Crankshaft</h3><p>Large, expensive, with long lead times.</p></div>
+    <div class="card"><h3>Oil filter</h3><p>High-volume consumable ordered constantly.</p></div>
+  </div>
+</section>
+
+<section id="approach">
+  <div class="kicker">Technical approach</div>
+  <h2>AlexNet with transfer learning</h2>
+  <p>AlexNet (Krizhevsky, Sutskever &amp; Hinton, 2012) won the ImageNet challenge with a 15.3% top-5 error rate versus 26.2% for the runner-up, and launched the deep-learning era in computer vision. It has five convolutional layers that learn visual features (edges, then textures, then shapes) and three fully connected layers that turn those features into class scores.</p>
+  <div class="arch" aria-label="AlexNet layer diagram">
+    <div><i style="height:110px;background:#4A90C2"></i><b>Input</b>3×224×224</div>
+    <div><i style="height:100px;background:#1D4E89"></i><b>Conv1</b>64@11×11</div>
+    <div><i style="height:80px;background:#8FB8DE"></i><b>Pool</b>27×27</div>
+    <div><i style="height:80px;background:#1D4E89"></i><b>Conv2</b>192@5×5</div>
+    <div><i style="height:60px;background:#8FB8DE"></i><b>Pool</b>13×13</div>
+    <div><i style="height:60px;background:#1D4E89"></i><b>Conv3</b>384@3×3</div>
+    <div><i style="height:60px;background:#1D4E89"></i><b>Conv4</b>256@3×3</div>
+    <div><i style="height:60px;background:#1D4E89"></i><b>Conv5</b>256@3×3</div>
+    <div><i style="height:45px;background:#8FB8DE"></i><b>Pool</b>6×6</div>
+    <div><i style="height:100px;background:#0B2545"></i><b>FC6</b>4096</div>
+    <div><i style="height:100px;background:#0B2545"></i><b>FC7</b>4096</div>
+    <div><i style="height:40px;background:#F28C28"></i><b>FC8</b>6 parts</div>
+  </div>
+  <div class="grid">
+    <div class="card"><h3>Transfer learning</h3><p>Start from ImageNet-pretrained weights, replace the final 1000-class layer with a 6-class layer, and fine-tune the whole network.</p></div>
+    <div class="card"><h3>Preprocessing</h3><p>Resize to 224×224, normalize with ImageNet mean/std. Training images get random crops, flips, ±15° rotations and color jitter.</p></div>
+    <div class="card"><h3>Training</h3><p>Cross-entropy loss, Adam optimizer, learning rate 1e-4, batch size 32, 12 epochs. Best epoch chosen on validation accuracy.</p></div>
+    <div class="card"><h3>Tracking</h3><p>Every run is logged to Weights &amp; Biases: loss and accuracy per epoch plus a test-set confusion matrix.</p></div>
+  </div>
+</section>
+
+<section id="data">
+  <div class="kicker">Dataset</div>
+  <h2>Building the dataset</h2>
+  <p>Sixty web image searches (ten per part) returned 1,695 photos. Corrupt, tiny and near-duplicate files were removed, then <strong>CLIP</strong>, a second pretrained model that matches images to text, threw out every photo that did not clearly show the part it was searched for: people, maps, logos, labeled diagrams and multi-part shots. That left <strong>1,101 clean photos</strong>, split 70% train, 15% validation and 15% test with a fixed seed. The test set is used only once, for the final score.</p>
+  <figure data-img="figures/sample_images.png"><figcaption>Five training images per class.</figcaption></figure>
+  <figure data-img="figures/class_counts.png"><figcaption>Images per class and split after cleaning.</figcaption></figure>
+  <figure data-img="figures/augmentation_examples.png"><figcaption>One photo and five random augmentations of it.</figcaption></figure>
+  <figure data-img="figures/clip_rejected.png"><figcaption>Examples removed by the CLIP filter. It is strict: it also drops some good photos, which costs less than training on wrong ones.</figcaption></figure>
+</section>
+
+<section id="experiments">
+  <div class="kicker">Experiments</div>
+  <h2>Change one thing at a time</h2>
+  <p>Each experiment changes a single setting from the baseline, so any difference in accuracy can be attributed to that setting. All runs use cross-entropy with label smoothing 0.1, Adam, a cosine learning-rate schedule and 15 epochs.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Run</th><th>Model</th><th>Batch</th><th>Learning rate</th><th>Augmentation</th><th>Question</th></tr>
+    <tr><td>baseline</td><td>AlexNet</td><td>32</td><td>1e-4</td><td>Yes</td><td>Reference point</td></tr>
+    <tr><td>bs16 / bs64</td><td>AlexNet</td><td>16 / 64</td><td>1e-4</td><td>Yes</td><td>Do smaller or larger batches help?</td></tr>
+    <tr><td>lr1e-3 / lr1e-5</td><td>AlexNet</td><td>32</td><td>1e-3 / 1e-5</td><td>Yes</td><td>Too fast vs. too slow learning?</td></tr>
+    <tr><td>no_aug</td><td>AlexNet</td><td>32</td><td>1e-4</td><td>No</td><td>Does augmentation reduce overfitting?</td></tr>
+    <tr><td>resnet18 / resnet50</td><td>ResNet18 / ResNet50</td><td>32</td><td>1e-4</td><td>Yes</td><td>Does a modern network beat AlexNet?</td></tr>
+  </table></div>
+</section>
+
+<section id="results">
+  <div class="kicker">Results</div>
+  <h2>What the experiments showed</h2>
+  <div id="results-table" class="table-wrap"><div class="missing">Results appear here automatically once <code>figures/results_summary.csv</code> from the Colab notebook is added to this repository.</div></div>
+  <figure data-img="figures/test_accuracy_bar.png"><figcaption>Test accuracy of every run.</figcaption></figure>
+  <figure data-img="figures/curves_baseline.png"><figcaption>Baseline training vs. validation loss and accuracy.</figcaption></figure>
+  <figure data-img="figures/experiment_comparisons.png"><figcaption>Validation accuracy per epoch for each experiment group.</figcaption></figure>
+  <figure data-img="figures/augmentation_gap.png"><figcaption>Train vs. validation accuracy with and without augmentation — a larger gap means more overfitting.</figcaption></figure>
+  <figure data-img="figures/cm_resnet50.png"><figcaption>Best model (ResNet50) on 172 held-out test photos: 2 errors.</figcaption></figure>
+  <figure data-img="figures/cm_baseline.png"><figcaption>AlexNet baseline confusion matrix on the same test photos.</figcaption></figure>
+  <figure data-img="figures/misclassified.png"><figcaption>The best model's only two mistakes: crankshafts in busy scenes, not single-part photos.</figcaption></figure>
+  <figure data-img="figures/prediction_example.png"><figcaption>A new photo the model never saw: crankshaft, 87% confidence.</figcaption></figure>
+  <div class="callout" id="findings">
+    <p style="margin-top:0"><strong>Best model: ResNet50, 98.8% test accuracy. Best AlexNet: 90.1% (batch size 16).</strong></p>
+    <p><strong>Learning rate mattered most.</strong> At 1e-3 the large updates wiped out the pretrained ImageNet weights, and accuracy collapsed to 20.9%, no better than always guessing the most common part. At 1e-5 the model learned too slowly and reached only 84.3%. 1e-4 was best.</p>
+    <p><strong>Batch size had a small effect.</strong> Batch 16 (90.1%) edged out 32 (89.0%) and 64 (87.2%). Smaller batches make more weight updates per epoch, and their noisier gradients act as mild regularization. The spread is about 5 test photos, so it is a weak effect.</p>
+    <p><strong>Augmentation slowed memorization.</strong> Without it, training accuracy hit 100% by epoch 4 while validation accuracy stalled. The test gain was small (89.0% vs 88.4%) because label smoothing and pretrained weights already limit overfitting.</p>
+    <p><strong>Architecture made the biggest jump.</strong> ResNet18 (95.3%) and ResNet50 (98.8%) beat AlexNet with the same ~4 minutes of training, thanks to deeper networks with skip connections and stronger pretrained features.</p>
+    <p style="margin-bottom:0"><strong>Data quality mattered more than any hyperparameter.</strong> With the first, uncleaned web images the model was unsure even on clear photos (30% confidence on an obvious turbocharger). CLIP filtering and more searches lifted ResNet50 from 89.6% to 98.8%. One caveat: the test photos are clean web photos, so accuracy on real engine-room photos will be lower until the model is trained on them.</p>
+  </div>
+</section>
+
+<section id="takeaways">
+  <div class="kicker">Takeaways</div>
+  <h2>What I learned and what's next</h2>
+  <ul class="take">
+    <li><strong>Transfer learning makes small datasets workable.</strong> A network pretrained on 1.2 million ImageNet photos already understands metal textures and shapes; it only needs a few hundred images per part to adapt.</li>
+    <li><strong>Data quality beats tuning.</strong> Automatically filtering wrong web images with CLIP did more than any hyperparameter.</li>
+    <li><strong>Controlled experiments matter.</strong> Changing one setting at a time is the only way to know what actually helped.</li>
+    <li><strong>Know when to say "not sure."</strong> Below 60% confidence PartSight asks for a human instead of guessing, which matters more than the last percent of accuracy in a quoting tool.</li>
+    <li><strong>Next steps:</strong> train on real warehouse and engine-room photos, add classes (cylinder heads, fuel pumps, gaskets), predict exact part numbers, and ship it as a phone app for engineers.</li>
+  </ul>
+</section>
+
+<section id="deliverables">
+  <div class="kicker">Deliverables</div>
+  <h2>Everything in one place</h2>
+  <div class="grid">
+    <div class="card"><h3>1 · Presentation</h3><p><a href="deliverables/PartSight_Slides.pdf">Slides (PDF)</a> · <a href="deliverables/PartSight_Slides.pptx">PowerPoint</a></p></div>
+    <div class="card"><h3>2 · Website</h3><p>This page, hosted on GitHub Pages.</p></div>
+    <div class="card"><h3>3 · Colab notebook</h3><p><a href="https://colab.research.google.com/drive/1Crwjur-RTCPTQIfSx77DgfwMhj61zDWP?usp=sharing">Open in Colab</a> · <a href="PartSight_AlexNet.ipynb">.ipynb file</a></p></div>
+    <div class="card"><h3>4 · Scientific poster</h3><p><a href="deliverables/PartSight_Poster.pdf">Poster (PDF)</a> · <a href="deliverables/PartSight_Poster.pptx">PowerPoint</a></p></div>
+    <div class="card"><h3>5 · Presentation video</h3><p><a href="#" id="link-video-2">Watch on YouTube</a> · <a href="deliverables/PartSight_Video_Script.md">Script</a></p></div>
+  </div>
+</section>
+
+<footer>
+  <p><strong>References.</strong> Krizhevsky, A., Sutskever, I., &amp; Hinton, G. E. (2012). ImageNet Classification with Deep Convolutional Neural Networks. NeurIPS. · He, K. et al. (2016). Deep Residual Learning for Image Recognition. CVPR. · Radford, A. et al. (2021). Learning Transferable Visual Models From Natural Language Supervision (CLIP). ICML. · <a href="https://pytorch.org/vision/stable/models.html">torchvision models</a> · <a href="https://docs.wandb.ai">Weights &amp; Biases</a></p>
+  <p>Ziya Batur Koroglu · Mathematics of Data Science · Fall 2026</p>
+</footer>
+</main>
+
+<script>
+// Load figures if they exist; otherwise show a placeholder box.
+document.querySelectorAll("figure[data-img]").forEach(fig => {
+  const src = fig.dataset.img, img = new Image();
+  img.alt = fig.querySelector("figcaption").textContent;
+  img.onload = () => fig.prepend(img);
+  img.onerror = () => {
+    const d = document.createElement("div"); d.className = "missing";
+    d.innerHTML = "Add <code>" + src + "</code> from the Colab notebook's output zip";
+    fig.prepend(d);
+  };
+  img.src = src;
+});
+// Build the results table from the notebook's CSV.
+fetch("figures/results_summary.csv").then(r => r.ok ? r.text() : Promise.reject()).then(csv => {
+  const lines = csv.trim().split(/\r?\n/), head = lines[0].split(",");
+  const rows = lines.slice(1).map(l => Object.fromEntries(l.split(",").map((v, i) => [head[i], v])));
+  const pct = v => (parseFloat(v) * 100).toFixed(1) + "%";
+  const bestVal = Math.max(...rows.map(r => +r.best_val_acc));
+  let h = "<table><tr><th>Run</th><th>Model</th><th>Batch</th><th>LR</th><th>Aug.</th><th>Best val acc</th><th>Test acc</th><th>Minutes</th></tr>";
+  rows.forEach(r => {
+    h += `<tr class="${+r.best_val_acc === bestVal ? "best" : ""}"><td>${r.run}</td><td>${r.model}</td><td>${r.batch_size}</td><td>${r.lr}</td><td>${r.augment === "True" ? "Yes" : "No"}</td><td>${pct(r.best_val_acc)}</td><td>${pct(r.test_acc)}</td><td>${(+r.minutes).toFixed(1)}</td></tr>`;
+  });
+  document.getElementById("results-table").innerHTML = h + "</table><p style='color:var(--muted);font-size:.9rem'>Highlighted: best run by validation accuracy.</p>";
+}).catch(() => {});
+</script>
+</body>
+</html>
