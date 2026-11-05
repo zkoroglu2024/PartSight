@@ -14,6 +14,7 @@
     :root:not([data-theme="light"]) { --bg:#0E1723; --ink:#E6EDF5; --muted:#9AAABC; --card:#16243A; --line:#243653; --navy:#9CC3F0; --steel:#6FA6E0; }
   }
   * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
   body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 "Segoe UI", system-ui, -apple-system, Calibri, Arial, sans-serif; }
   a { color:var(--steel); }
   header.hero { background:#0B2545; color:#fff; padding:72px 16px 56px; }
@@ -83,7 +84,7 @@
     <p class="sub">Identifying marine diesel engine parts from a single photo with AlexNet.</p>
     <div class="btns">
       <!-- ✏️ Replace the # with your links -->
-      <a href="#demo" id="link-demo">▶ Try it live</a>
+      <a href="#demo" id="link-demo" hidden>▶ Try it live</a>
       <a href="https://colab.research.google.com/drive/1Crwjur-RTCPTQIfSx77DgfwMhj61zDWP?usp=sharing" class="ghost" id="link-colab">Colab notebook</a>
       <a href="deliverables/PartSight_Slides.pdf" class="ghost" id="link-slides">Slides</a>
       <a href="deliverables/PartSight_Poster.pdf" class="ghost" id="link-poster">Poster</a>
@@ -95,13 +96,13 @@
 </header>
 
 <nav><div class="wrap">
-  <a href="#demo">Try it</a><a href="#problem">Problem</a><a href="#approach">Approach</a><a href="#data">Data</a>
+  <a href="#demo" id="nav-demo" hidden>Try it</a><a href="#problem">Problem</a><a href="#approach">Approach</a><a href="#data">Data</a>
   <a href="#experiments">Experiments</a><a href="#results">Results</a><a href="#takeaways">Takeaways</a><a href="#deliverables">Deliverables</a>
 </div></nav>
 
 <main class="wrap">
 
-<section id="demo">
+<section id="demo" hidden>
   <div class="kicker">Live demo</div>
   <h2>Try PartSight on your own photo</h2>
   <p>Upload a photo (or take one with your phone) of a fuel injector, turbocharger, piston, connecting rod, crankshaft or oil filter. The trained ResNet50 model runs <strong>right here in your browser</strong>; your photo is never uploaded anywhere.</p>
@@ -277,6 +278,11 @@ fetch("figures/results_summary.csv").then(r => r.ok ? r.text() : Promise.reject(
   const MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225], SIZE = 224, THRESHOLD = 0.60;
   const $ = (id) => document.getElementById(id);
   let session = null, loading = null;
+
+  // show the demo only once the model file has been published
+  fetch("model/partsight_web.onnx", { method: "HEAD" }).then(r => {
+    if (r.ok) ["demo", "link-demo", "nav-demo"].forEach(id => $(id).hidden = false);
+  }).catch(() => {});
 
   // example buttons
   ["fuel_injector", "turbocharger", "piston", "connecting_rod", "crankshaft", "oil_filter"].forEach(c => {
