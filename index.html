@@ -51,6 +51,24 @@
   .arch div b { display:block; color:var(--navy); font-size:.8rem; }
   .callout { border-left:0; background:var(--card); padding:16px 20px; border-radius:10px; margin:20px 0; }
   ul.take li { margin-bottom:8px; }
+  .demo { display:grid; gap:24px; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; margin-top:20px; }
+  @media (max-width:760px){ .demo { grid-template-columns:1fr; } }
+  .drop { border:2px dashed var(--line); border-radius:12px; background:var(--card); min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; text-align:center; cursor:pointer; }
+  .drop.over { border-color:var(--orange); }
+  .drop img { max-width:100%; max-height:320px; border-radius:8px; }
+  .btn { display:inline-block; padding:10px 18px; border-radius:8px; background:var(--orange); color:#fff; font-weight:600; border:0; font-size:1rem; cursor:pointer; }
+  .examples { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .examples button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:4px; cursor:pointer; width:62px; height:62px; }
+  .examples img { width:100%; height:100%; object-fit:contain; }
+  .result h3 { margin:0 0 4px; font-size:1.6rem; color:var(--navy); }
+  .result .conf { color:var(--muted); margin-bottom:16px; }
+  .bar { display:grid; grid-template-columns:130px 1fr 52px; gap:8px; align-items:center; margin:6px 0; font-size:.92rem; }
+  .bar .track { background:var(--card); border-radius:6px; height:16px; overflow:hidden; }
+  .bar .fill { display:block; background:var(--steel); height:100%; width:0; transition:width .4s; }
+  .bar.top .fill { background:var(--orange); }
+  .bar.top { font-weight:700; }
+  .unsure { color:#B45309; font-weight:700; }
+  .small { color:var(--muted); font-size:.85rem; }
   footer { margin-top:64px; padding:28px 0 40px; border-top:1px solid var(--line); color:var(--muted); font-size:.9rem; }
   .btns a { display:inline-block; margin:4px 8px 4px 0; padding:9px 16px; border-radius:8px; background:var(--orange); color:#fff; text-decoration:none; font-weight:600; }
   .btns a.ghost { background:transparent; border:1px solid #D6E2F0; }
@@ -65,7 +83,8 @@
     <p class="sub">Identifying marine diesel engine parts from a single photo with AlexNet.</p>
     <div class="btns">
       <!-- ✏️ Replace the # with your links -->
-      <a href="https://colab.research.google.com/drive/1Crwjur-RTCPTQIfSx77DgfwMhj61zDWP?usp=sharing" id="link-colab">Colab notebook</a>
+      <a href="#demo" id="link-demo">▶ Try it live</a>
+      <a href="https://colab.research.google.com/drive/1Crwjur-RTCPTQIfSx77DgfwMhj61zDWP?usp=sharing" class="ghost" id="link-colab">Colab notebook</a>
       <a href="deliverables/PartSight_Slides.pdf" class="ghost" id="link-slides">Slides</a>
       <a href="deliverables/PartSight_Poster.pdf" class="ghost" id="link-poster">Poster</a>
       <!-- ✏️ Replace # with your YouTube (unlisted) link after recording -->
@@ -76,11 +95,34 @@
 </header>
 
 <nav><div class="wrap">
-  <a href="#problem">Problem</a><a href="#approach">Approach</a><a href="#data">Data</a>
+  <a href="#demo">Try it</a><a href="#problem">Problem</a><a href="#approach">Approach</a><a href="#data">Data</a>
   <a href="#experiments">Experiments</a><a href="#results">Results</a><a href="#takeaways">Takeaways</a><a href="#deliverables">Deliverables</a>
 </div></nav>
 
 <main class="wrap">
+
+<section id="demo">
+  <div class="kicker">Live demo</div>
+  <h2>Try PartSight on your own photo</h2>
+  <p>Upload a photo (or take one with your phone) of a fuel injector, turbocharger, piston, connecting rod, crankshaft or oil filter. The trained ResNet50 model runs <strong>right here in your browser</strong>; your photo is never uploaded anywhere.</p>
+  <div class="demo">
+    <div>
+      <label class="drop" id="drop" for="file">
+        <img id="preview" alt="" hidden>
+        <span id="dropText"><strong>Tap to choose or take a photo</strong><br><span class="small">or drag an image here</span></span>
+      </label>
+      <input type="file" id="file" accept="image/*" hidden>
+      <div class="small" style="margin-top:12px">Or try an example (photos from the training set):</div>
+      <div class="examples" id="examples"></div>
+    </div>
+    <div class="result" id="result">
+      <h3 id="label">Waiting for a photo…</h3>
+      <div class="conf" id="conf"><span id="status" class="small">The model (~26 MB) loads the first time you try it.</span></div>
+      <div id="bars"></div>
+      <p class="small" style="margin-top:16px">Below 60% confidence PartSight answers “not sure” instead of guessing. It only knows these six parts, so photos of anything else will still be forced into one of them.</p>
+    </div>
+  </div>
+</section>
 
 <section id="problem">
   <div class="kicker">Motivation</div>
@@ -225,6 +267,95 @@ fetch("figures/results_summary.csv").then(r => r.ok ? r.text() : Promise.reject(
   });
   document.getElementById("results-table").innerHTML = h + "</table><p style='color:var(--muted);font-size:.9rem'>Highlighted: best run by validation accuracy.</p>";
 }).catch(() => {});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/ort.min.js"></script>
+<script>
+(() => {
+  const CLASSES = ["connecting_rod", "crankshaft", "fuel_injector", "oil_filter", "piston", "turbocharger"];
+  const NICE = { connecting_rod: "Connecting rod", crankshaft: "Crankshaft", fuel_injector: "Fuel injector",
+                 oil_filter: "Oil filter", piston: "Piston", turbocharger: "Turbocharger" };
+  const MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225], SIZE = 224, THRESHOLD = 0.60;
+  const $ = (id) => document.getElementById(id);
+  let session = null, loading = null;
+
+  // example buttons
+  ["fuel_injector", "turbocharger", "piston", "connecting_rod", "crankshaft", "oil_filter"].forEach(c => {
+    const b = document.createElement("button"); b.type = "button"; b.title = NICE[c];
+    b.innerHTML = `<img src="demo/examples/${c}.jpg" alt="${NICE[c]} example">`;
+    b.onclick = () => runOn(`demo/examples/${c}.jpg`);
+    $("examples").appendChild(b);
+  });
+
+  async function loadModel() {
+    if (session) return session;
+    if (loading) return loading;
+    loading = (async () => {
+      if (typeof ort === "undefined") throw new Error("Could not load the AI library. Check your internet connection.");
+      ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/";
+      ort.env.wasm.numThreads = 1;
+      const res = await fetch("model/partsight_web.onnx");
+      if (!res.ok) throw new Error("Model file not found (" + res.status + ").");
+      const total = +res.headers.get("content-length") || 0;
+      const reader = res.body.getReader(); const chunks = []; let got = 0;
+      for (;;) {
+        const { done, value } = await reader.read(); if (done) break;
+        chunks.push(value); got += value.length;
+        $("status").textContent = total ? `Loading model… ${Math.round(100 * got / total)}%` : `Loading model… ${(got / 1e6).toFixed(1)} MB`;
+      }
+      const buf = new Uint8Array(got); let o = 0; for (const c of chunks) { buf.set(c, o); o += c.length; }
+      $("status").textContent = "Starting model…";
+      session = await ort.InferenceSession.create(buf, { executionProviders: ["wasm"] });
+      return session;
+    })();
+    try { return await loading; } catch (e) { loading = null; throw e; }
+  }
+
+  function toTensor(img) {
+    const cv = document.createElement("canvas"); cv.width = SIZE; cv.height = SIZE;
+    const ctx = cv.getContext("2d"); ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, SIZE, SIZE);                       // same as Resize((224, 224)) in the notebook
+    const d = ctx.getImageData(0, 0, SIZE, SIZE).data, n = SIZE * SIZE, x = new Float32Array(3 * n);
+    for (let i = 0; i < n; i++) for (let c = 0; c < 3; c++) x[c * n + i] = (d[4 * i + c] / 255 - MEAN[c]) / STD[c];
+    return new ort.Tensor("float32", x, [1, 3, SIZE, SIZE]);
+  }
+
+  function show(probs) {
+    const order = [...probs.keys()].sort((a, b) => probs[b] - probs[a]), top = order[0], p = probs[top];
+    $("label").innerHTML = p >= THRESHOLD ? NICE[CLASSES[top]] : `<span class="unsure">Not sure</span>`;
+    $("conf").innerHTML = p >= THRESHOLD ? `${(100 * p).toFixed(1)}% confident`
+      : `Best guess: ${NICE[CLASSES[top]]} (${(100 * p).toFixed(1)}%), please send to a parts expert`;
+    $("bars").innerHTML = order.map((k, i) => `<div class="bar ${i === 0 ? "top" : ""}"><span>${NICE[CLASSES[k]]}</span>
+      <span class="track"><span class="fill" data-w="${(100 * probs[k]).toFixed(1)}"></span></span><span>${(100 * probs[k]).toFixed(1)}%</span></div>`).join("");
+    requestAnimationFrame(() => document.querySelectorAll("#bars .fill").forEach(f => f.style.width = f.dataset.w + "%"));
+    if (window.innerWidth < 760) $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function runOn(src) {
+    const img = new Image();
+    img.onload = async () => {
+      $("preview").src = src; $("preview").hidden = false; $("dropText").hidden = true;
+      $("label").textContent = "Thinking…"; $("bars").innerHTML = "";
+      $("conf").innerHTML = '<span id="status" class="small"></span>';
+      try {
+        const s = await loadModel();
+        $("status").textContent = "Analyzing…";
+        const out = await s.run({ [s.inputNames[0]]: toTensor(img) });
+        show(Array.from(out[s.outputNames[0]].data));
+      } catch (e) {
+        $("label").textContent = "Something went wrong";
+        $("conf").textContent = e.message || String(e);
+      }
+    };
+    img.onerror = () => { $("label").textContent = "Could not read that image"; };
+    img.src = src;
+  }
+
+  $("file").addEventListener("change", e => { const f = e.target.files[0]; if (f) runOn(URL.createObjectURL(f)); });
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) runOn(URL.createObjectURL(f)); });
+})();
 </script>
 </body>
 </html>
