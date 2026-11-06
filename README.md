@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/partsight-logo.svg" alt="PartSight" width="420"></p>
+
 # PartSight: Identifying Marine Diesel Engine Parts with AlexNet
 
 **Mathematics of Data Science · Final Project · Fall 2026 · Ziya Batur Koroglu**

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PartSight · AlexNet for Marine Engine Parts</title>
+<link rel="icon" href="assets/partsight-icon.svg" type="image/svg+xml">
 <meta name="description" content="Classifying marine diesel engine parts from photos with AlexNet — Mathematics of Data Science final project.">
 <style>
   :root {
@@ -19,6 +20,9 @@
   a { color:var(--steel); }
   header.hero { background:#0B2545; color:#fff; padding:72px 16px 56px; }
   .wrap { max-width:960px; margin:0 auto; padding:0 16px; }
+  .hero h1.brand { display:flex; align-items:center; gap:16px; }
+  .hero h1.brand img { width:clamp(52px,9vw,76px); height:auto; flex:none; }
+  .hero h1.brand .o { color:#F28C28; }
   .hero h1 { font-size:clamp(2.2rem,6vw,3.4rem); margin:0 0 8px; letter-spacing:-.02em; }
   .hero p.sub { font-size:1.2rem; color:#D6E2F0; margin:0 0 24px; max-width:640px; }
   .hero .meta { color:#D6E2F0; font-size:.95rem; }
@@ -80,7 +84,7 @@
 <header class="hero">
   <div class="wrap">
     <div class="kicker">Mathematics of Data Science · Final Project</div>
-    <h1>PartSight</h1>
+    <h1 class="brand"><img src="assets/partsight-mark.svg" alt="" width="72" height="72"><span>Part<span class="o">Sight</span></span></h1>
     <p class="sub">Identifying marine diesel engine parts from a single photo with AlexNet.</p>
     <div class="btns">
       <!-- ✏️ Replace the # with your links -->
