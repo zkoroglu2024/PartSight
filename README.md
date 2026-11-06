@@ -5,6 +5,7 @@
 PartSight classifies photos of six marine diesel / generator engine parts (fuel injector, turbocharger, piston, connecting rod, crankshaft, oil filter) using AlexNet with transfer learning, and compares it with ResNet18 and ResNet50.
 
 🌐 **Website:** https://zkoroglu2024.github.io/PartSight/
+▶️ **Live demo:** https://zkoroglu2024.github.io/PartSight/#demo (upload a photo; the ResNet50 model runs in your browser)
 📓 **Colab notebook:** https://colab.research.google.com/drive/1Crwjur-RTCPTQIfSx77DgfwMhj61zDWP?usp=sharing
 
 ## Deliverables
@@ -12,7 +13,7 @@ PartSight classifies photos of six marine diesel / generator engine parts (fuel 
 | # | Deliverable | File |
 |---|---|---|
 | 1 | Presentation | [Slides (PDF)](deliverables/PartSight_Slides.pdf) · [PowerPoint](deliverables/PartSight_Slides.pptx) |
-| 2 | Website | [index.html](index.html), served with GitHub Pages |
+| 2 | Website + live demo | [index.html](index.html), served with GitHub Pages; the demo runs [model/partsight_web.onnx](model/partsight_web.onnx) in the browser |
 | 3 | Colab notebook | [PartSight_AlexNet.ipynb](PartSight_AlexNet.ipynb) (with all outputs) |
 | 4 | Scientific poster | [Poster (PDF)](deliverables/PartSight_Poster.pdf) · [PowerPoint](deliverables/PartSight_Poster.pptx) |
 | 5 | Presentation video | YouTube link: *add after recording* · [Script](deliverables/PartSight_Video_Script.md) |
@@ -43,4 +44,6 @@ index.html                  project website (GitHub Pages)
 PartSight_AlexNet.ipynb     Colab notebook with outputs
 figures/                    charts and results from the notebook run
 deliverables/               slides, poster (PDF + PowerPoint), video script
+model/                      ResNet50 exported to ONNX (8-bit weights) for the browser demo
+demo/examples/              example photos for the demo
 ```
